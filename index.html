@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Data Collection Camera</title>
+    <title>AI Data Collector</title>
     <style>
         * {
             margin: 0;
@@ -12,59 +12,127 @@
         }
         
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #0a0a0a;
+            color: #fff;
             min-height: 100vh;
             padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(255, 110, 199, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 40% 20%, rgba(88, 166, 255, 0.3) 0%, transparent 50%);
+            animation: gradient 15s ease infinite;
+            z-index: -1;
+        }
+        
+        @keyframes gradient {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            50% { transform: translate(-10%, 10%) rotate(180deg); }
         }
         
         .container {
-            max-width: 600px;
+            max-width: 900px;
             margin: 0 auto;
-            background: white;
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            background: rgba(20, 20, 20, 0.8);
+            backdrop-filter: blur(20px);
+            border-radius: 30px;
+            padding: 40px;
+            box-shadow: 
+                0 20px 60px rgba(0,0,0,0.5),
+                inset 0 1px 0 rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.1);
         }
         
         h1 {
             text-align: center;
-            color: #667eea;
-            margin-bottom: 30px;
-            font-size: 28px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 36px;
+            font-weight: 800;
+            margin-bottom: 10px;
+            letter-spacing: -1px;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #888;
+            margin-bottom: 40px;
+            font-size: 14px;
+        }
+        
+        .ai-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.05); }
         }
         
         .input-group {
             margin-bottom: 20px;
+            position: relative;
         }
         
         label {
             display: block;
             margin-bottom: 8px;
-            color: #333;
+            color: #aaa;
             font-weight: 600;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
         
         input {
             width: 100%;
-            padding: 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
+            padding: 15px;
+            background: rgba(255,255,255,0.05);
+            border: 2px solid rgba(255,255,255,0.1);
+            border-radius: 15px;
             font-size: 16px;
-            transition: border 0.3s;
+            color: #fff;
+            transition: all 0.3s;
         }
         
         input:focus {
             outline: none;
             border-color: #667eea;
+            background: rgba(255,255,255,0.08);
+            box-shadow: 0 0 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        input::placeholder {
+            color: #555;
         }
         
         #video {
             width: 100%;
-            border-radius: 15px;
+            border-radius: 20px;
             background: #000;
             display: none;
             margin-bottom: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
         }
         
         #canvas {
@@ -73,84 +141,169 @@
         
         .btn {
             width: 100%;
-            padding: 15px;
+            padding: 18px;
             border: none;
-            border-radius: 10px;
-            font-size: 18px;
-            font-weight: 600;
+            border-radius: 15px;
+            font-size: 16px;
+            font-weight: 700;
             cursor: pointer;
             transition: all 0.3s;
             margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+        
+        .btn:hover::before {
+            left: 100%;
         }
         
         .btn-primary {
-            background: #667eea;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
         }
         
         .btn-primary:hover {
-            background: #5568d3;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.5);
         }
         
         .btn-success {
-            background: #48bb78;
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
             color: white;
         }
         
         .btn-success:hover {
-            background: #38a169;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(72, 187, 120, 0.5);
         }
         
         .btn-danger {
-            background: #f56565;
+            background: linear-gradient(135deg, #f56565 0%, #c53030 100%);
             color: white;
         }
         
         .btn:disabled {
-            background: #cbd5e0;
+            background: #333;
+            color: #666;
             cursor: not-allowed;
             transform: none;
         }
         
         .preview-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-            gap: 15px;
-            margin-top: 30px;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 40px;
         }
         
         .preview-item {
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px;
             overflow: hidden;
-            background: #f7fafc;
+            transition: all 0.3s;
+            animation: fadeIn 0.5s;
+            position: relative;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        
+        .preview-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.3);
+            border-color: #667eea;
         }
         
         .preview-item img {
             width: 100%;
-            height: 150px;
+            height: 200px;
             object-fit: cover;
         }
         
         .preview-info {
-            padding: 10px;
+            padding: 15px;
+            font-size: 13px;
+        }
+        
+        .preview-label {
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 5px;
+            font-size: 15px;
+        }
+        
+        .preview-category {
+            color: #888;
             font-size: 12px;
-            color: #555;
+            margin-bottom: 5px;
+        }
+        
+        .preview-detected {
+            display: inline-block;
+            background: rgba(102, 126, 234, 0.2);
+            padding: 4px 10px;
+            border-radius: 10px;
+            font-size: 11px;
+            color: #667eea;
+            margin-top: 8px;
+        }
+        
+        .delete-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(245, 101, 101, 0.9);
+            border: none;
+            color: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            backdrop-filter: blur(10px);
+        }
+        
+        .delete-btn:hover {
+            background: #c53030;
+            transform: scale(1.1);
         }
         
         .stats {
-            background: #f7fafc;
-            padding: 15px;
-            border-radius: 10px;
-            margin-top: 20px;
+            background: rgba(255,255,255,0.05);
+            padding: 25px;
+            border-radius: 20px;
+            margin-top: 30px;
             text-align: center;
+            border: 1px solid rgba(255,255,255,0.1);
         }
         
         .stats h3 {
-            color: #667eea;
-            margin-bottom: 10px;
+            background: linear-gradient(135deg, #667eea, #f093fb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 24px;
+            margin-bottom: 15px;
         }
         
         .hidden {
@@ -158,37 +311,62 @@
         }
         
         .alert {
-            padding: 15px;
-            border-radius: 10px;
+            padding: 15px 20px;
+            border-radius: 15px;
             margin-bottom: 20px;
             font-weight: 500;
+            animation: slideDown 0.3s;
+            border-left: 4px solid;
+        }
+        
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
         
         .alert-info {
-            background: #bee3f8;
-            color: #2c5282;
+            background: rgba(66, 153, 225, 0.2);
+            color: #90cdf4;
+            border-color: #4299e1;
         }
         
         .alert-success {
-            background: #c6f6d5;
-            color: #22543d;
+            background: rgba(72, 187, 120, 0.2);
+            color: #9ae6b4;
+            border-color: #48bb78;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: #667eea;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>📸 Data Collection Camera</h1>
+        <span class="ai-badge">🤖 AI-Powered Detection</span>
+        <h1>AI Data Collector</h1>
+        <p class="subtitle">Deteksi objek otomatis dengan TensorFlow.js</p>
         
         <div id="alertBox" class="alert alert-info hidden"></div>
         
         <div class="input-group">
-            <label for="labelInput">Label / Deskripsi:</label>
-            <input type="text" id="labelInput" placeholder="Contoh: laptop hitam">
+            <label for="labelInput">Label Manual (Opsional)</label>
+            <input type="text" id="labelInput" placeholder="Kosongkan untuk deteksi otomatis">
         </div>
         
         <div class="input-group">
-            <label for="categoryInput">Kategori:</label>
-            <input type="text" id="categoryInput" placeholder="Contoh: elektronik">
+            <label for="categoryInput">Kategori</label>
+            <input type="text" id="categoryInput" placeholder="Contoh: elektronik, furniture">
         </div>
         
         <button class="btn btn-primary" id="startBtn">🎥 Buka Kamera</button>
@@ -201,17 +379,20 @@
         
         <div class="stats">
             <h3>Foto Terkumpul: <span id="photoCount">0</span></h3>
-            <button class="btn btn-primary" id="exportBtn" disabled>💾 Download Data</button>
+            <button class="btn btn-primary" id="exportBtn" disabled>💾 Download Data (ZIP)</button>
         </div>
         
         <div class="preview-grid" id="previewGrid"></div>
     </div>
     
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.11.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script>
         let stream = null;
         let dataCollected = [];
         let photoCount = 0;
+        let model = null;
         
         const video = document.getElementById('video');
         const canvas = document.getElementById('canvas');
@@ -228,8 +409,17 @@
         const photoCountSpan = document.getElementById('photoCount');
         const alertBox = document.getElementById('alertBox');
         
+        // Load AI model
+        async function loadModel() {
+            showAlert('⏳ Loading AI model...', 'info');
+            model = await cocoSsd.load();
+            showAlert('✅ AI model siap! Deteksi otomatis aktif', 'success');
+        }
+        
+        loadModel();
+        
         function showAlert(message, type = 'info') {
-            alertBox.textContent = message;
+            alertBox.innerHTML = message;
             alertBox.className = `alert alert-${type}`;
             alertBox.classList.remove('hidden');
             setTimeout(() => alertBox.classList.add('hidden'), 3000);
@@ -252,21 +442,33 @@
                 captureBtn.classList.remove('hidden');
                 stopBtn.classList.remove('hidden');
                 
-                showAlert('Kamera aktif!', 'success');
+                showAlert('🎥 Kamera aktif!', 'success');
             } catch (err) {
-                showAlert('Gagal akses kamera: ' + err.message, 'danger');
+                showAlert('❌ Gagal akses kamera: ' + err.message, 'info');
             }
         });
         
-        captureBtn.addEventListener('click', () => {
-            const label = labelInput.value.trim() || 'unlabeled';
-            const category = categoryInput.value.trim() || 'general';
+        captureBtn.addEventListener('click', async () => {
+            captureBtn.disabled = true;
+            captureBtn.innerHTML = '<span class="loading"></span> Mendeteksi...';
             
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
             ctx.drawImage(video, 0, 0);
             
             const imageData = canvas.toDataURL('image/jpeg', 0.9);
+            
+            // AI Detection
+            let detectedObjects = [];
+            if (model) {
+                const predictions = await model.detect(video);
+                detectedObjects = predictions.map(p => `${p.class} (${Math.round(p.score * 100)}%)`);
+            }
+            
+            const label = labelInput.value.trim() || 
+                         (detectedObjects.length > 0 ? detectedObjects[0].split(' ')[0] : 'unlabeled');
+            const category = categoryInput.value.trim() || 'general';
+            
             const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
             const filename = `photo_${String(photoCount).padStart(4, '0')}_${timestamp}.jpg`;
             
@@ -276,6 +478,7 @@
                 timestamp: new Date().toLocaleString('id-ID'),
                 label: label,
                 category: category,
+                detected: detectedObjects.join(', ') || 'Tidak terdeteksi',
                 imageData: imageData
             };
             
@@ -284,12 +487,15 @@
             
             addPreview(record);
             updateStats();
+            saveToLocalStorage();
             
             labelInput.value = '';
             categoryInput.value = '';
-            labelInput.focus();
             
-            showAlert(`Foto ${photoCount} tersimpan!`, 'success');
+            showAlert(`✅ Foto ${photoCount} tersimpan! ${detectedObjects.length > 0 ? '🤖 ' + detectedObjects[0] : ''}`, 'success');
+            
+            captureBtn.disabled = false;
+            captureBtn.innerHTML = '📷 AMBIL FOTO';
         });
         
         stopBtn.addEventListener('click', () => {
@@ -301,22 +507,38 @@
                 captureBtn.classList.add('hidden');
                 stopBtn.classList.add('hidden');
                 
-                showAlert('Kamera ditutup', 'info');
+                showAlert('📵 Kamera ditutup', 'info');
             }
         });
         
         function addPreview(record) {
             const div = document.createElement('div');
             div.className = 'preview-item';
+            div.dataset.id = record.photo_id;
             div.innerHTML = `
+                <button class="delete-btn" onclick="deletePhoto(${record.photo_id})">✕</button>
                 <img src="${record.imageData}" alt="${record.label}">
                 <div class="preview-info">
-                    <strong>${record.label}</strong><br>
-                    ${record.category}<br>
-                    <small>${record.timestamp}</small>
+                    <div class="preview-label">${record.label}</div>
+                    <div class="preview-category">${record.category}</div>
+                    <div class="preview-detected">🤖 ${record.detected}</div>
+                    <div style="color: #555; font-size: 11px; margin-top: 8px;">${record.timestamp}</div>
                 </div>
             `;
             previewGrid.insertBefore(div, previewGrid.firstChild);
+        }
+        
+        window.deletePhoto = function(photoId) {
+            if (!confirm('Hapus foto ini?')) return;
+            
+            dataCollected = dataCollected.filter(r => r.photo_id !== photoId);
+            document.querySelector(`.preview-item[data-id="${photoId}"]`).remove();
+            
+            photoCount = dataCollected.length;
+            updateStats();
+            saveToLocalStorage();
+            
+            showAlert('🗑️ Foto dihapus', 'info');
         }
         
         function updateStats() {
@@ -327,17 +549,16 @@
         exportBtn.addEventListener('click', async () => {
             if (dataCollected.length === 0) return;
             
-            showAlert('Membuat file ZIP...', 'info');
+            showAlert('📦 Membuat file ZIP...', 'info');
+            exportBtn.disabled = true;
             
             const zip = new JSZip();
             const imgFolder = zip.folder('images');
             
-            // CSV metadata
-            let csv = 'photo_id,filename,timestamp,label,category\n';
+            let csv = 'photo_id,filename,timestamp,label,category,detected_objects\n';
             dataCollected.forEach(record => {
-                csv += `${record.photo_id},"${record.filename}","${record.timestamp}","${record.label}","${record.category}"\n`;
+                csv += `${record.photo_id},"${record.filename}","${record.timestamp}","${record.label}","${record.category}","${record.detected}"\n`;
                 
-                // Add image to ZIP
                 const base64Data = record.imageData.split(',')[1];
                 imgFolder.file(record.filename, base64Data, {base64: true});
             });
@@ -348,14 +569,18 @@
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `data_collection_${Date.now()}.zip`;
+            a.download = `ai_data_collection_${Date.now()}.zip`;
             a.click();
             
-            showAlert('Download berhasil!', 'success');
+            showAlert('✅ Download berhasil!', 'success');
+            exportBtn.disabled = false;
         });
         
-        // Load saved data dari localStorage
-        window.addEventListener('load', () => {
+        function saveToLocalStorage() {
+            localStorage.setItem('dataCollected', JSON.stringify(dataCollected));
+        }
+        
+        function loadFromLocalStorage() {
             const saved = localStorage.getItem('dataCollected');
             if (saved) {
                 dataCollected = JSON.parse(saved);
@@ -363,12 +588,10 @@
                 dataCollected.forEach(record => addPreview(record));
                 updateStats();
             }
-        });
+        }
         
-        // Auto-save ke localStorage
-        window.addEventListener('beforeunload', () => {
-            localStorage.setItem('dataCollected', JSON.stringify(dataCollected));
-        });
+        window.addEventListener('load', loadFromLocalStorage);
+        window.addEventListener('beforeunload', saveToLocalStorage);
     </script>
 </body>
 </html>
