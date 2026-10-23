@@ -1372,8 +1372,10 @@
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.11.0"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
-    
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+
+
     <script>
         // GLOBAL STATE
         let stream = null;
@@ -1465,36 +1467,82 @@
         
         loadModel();
         
-        // GOOGLE LOGIN (Simplified - LocalStorage based)
-        googleLoginBtn.addEventListener('click', () => {
-            // Simulasi login Google (untuk demo)
-            // Dalam production, gunakan Google OAuth 2.0
-            const demoUser = {
-                name: 'Demo User',
-                email: 'demo@zxdetection.com',
-                avatar: 'D'
-            };
-            
-            currentUser = demoUser;
-            loginSection.classList.add('hidden');
-            profileSection.classList.remove('hidden');
-            
-            userAvatar.textContent = demoUser.avatar;
-            userName.textContent = demoUser.name;
-            userEmail.textContent = demoUser.email;
-            
-            saveToDriveBtn.disabled = false;
-            
-            showAlert('✅ Login berhasil! Data bisa disimpan ke Drive', 'success');
+        // FIREBASE INITIALIZATION
+        const firebaseConfig = {
+          apiKey: "AIzaSyC_8uIMO87LAQe0mOQAm9Wo6itU_kJz8BA",
+          authDomain: "zx-ai-detect.firebaseapp.com",
+          projectId: "zx-ai-detect",
+          storageBucket: "zx-ai-detect.firebasestorage.app",
+          messagingSenderId: "616320389176",
+          appId: "1:616320389176:web:294d713c29e2f46527d6cd"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+
+        // FIREBASE LOGIN
+        googleLoginBtn.addEventListener('click', async () => {
+            try {
+                const provider = new firebase.auth.GoogleAuthProvider();
+                const result = await auth.signInWithPopup(provider);
+                
+                currentUser = {
+                    name: result.user.displayName,
+                    email: result.user.email,
+                    uid: result.user.uid,
+                    avatar: result.user.displayName ? result.user.displayName.charAt(0).toUpperCase() : 'U'
+                };
+                
+                loginSection.classList.add('hidden');
+                profileSection.classList.remove('hidden');
+                
+                userAvatar.textContent = currentUser.avatar;
+                userName.textContent = currentUser.name;
+                userEmail.textContent = currentUser.email;
+                
+                saveToDriveBtn.disabled = false;
+                
+                showAlert(`✅ Login berhasil! Selamat datang, ${currentUser.name}`, 'success');
+            } catch (error) {
+                showAlert(`❌ Login gagal: ${error.message}`, 'info');
+            }
         });
         
-        logoutBtn.addEventListener('click', () => {
-            currentUser = null;
-            profileSection.classList.add('hidden');
-            loginSection.classList.remove('hidden');
-            saveToDriveBtn.disabled = true;
-            showAlert('👋 Logout berhasil', 'info');
+        logoutBtn.addEventListener('click', async () => {
+            try {
+                await auth.signOut();
+                currentUser = null;
+                profileSection.classList.add('hidden');
+                loginSection.classList.remove('hidden');
+                saveToDriveBtn.disabled = true;
+                showAlert('👋 Logout berhasil', 'info');
+            } catch (error) {
+                showAlert(`❌ Logout gagal: ${error.message}`, 'info');
+            }
         });
+
+        // Auto-login jika user sudah login sebelumnya
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                currentUser = {
+                    name: user.displayName,
+                    email: user.email,
+                    uid: user.uid,
+                    avatar: user.displayName ? user.displayName.charAt(0).toUpperCase() : 'U'
+                };
+                
+                loginSection.classList.add('hidden');
+                profileSection.classList.remove('hidden');
+                
+                userAvatar.textContent = currentUser.avatar;
+                userName.textContent = currentUser.name;
+                userEmail.textContent = currentUser.email;
+                
+                saveToDriveBtn.disabled = false;
+            }
+        });
+
+
         
         // NAVIGATION
         document.querySelectorAll('.nav-link, .bottom-nav-item').forEach(link => {
@@ -2262,8 +2310,15 @@ Metode: IoU Tracking (threshold: ${iouThreshold})
             }
         }
         
-        window.addEventListener('load', loadFromLocalStorage);
+               // Load data SETELAH semua DOM + script siap
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                loadFromLocalStorage();
+            }, 500);
+        });
+        
         setInterval(saveToLocalStorage, 5000);
+
     </script>
 </body>
 </html>
