@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Collection Camera</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #667eea;
+            margin-bottom: 30px;
+            font-size: 28px;
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+        }
+        
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border 0.3s;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        #video {
+            width: 100%;
+            border-radius: 15px;
+            background: #000;
+            display: none;
+            margin-bottom: 20px;
+        }
+        
+        #canvas {
+            display: none;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 15px;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-success {
+            background: #48bb78;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #38a169;
+        }
+        
+        .btn-danger {
+            background: #f56565;
+            color: white;
+        }
+        
+        .btn:disabled {
+            background: #cbd5e0;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .preview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 30px;
+        }
+        
+        .preview-item {
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            background: #f7fafc;
+        }
+        
+        .preview-item img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+        }
+        
+        .preview-info {
+            padding: 10px;
+            font-size: 12px;
+            color: #555;
+        }
+        
+        .stats {
+            background: #f7fafc;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            text-align: center;
+        }
+        
+        .stats h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .alert {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+        
+        .alert-info {
+            background: #bee3f8;
+            color: #2c5282;
+        }
+        
+        .alert-success {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📸 Data Collection Camera</h1>
+        
+        <div id="alertBox" class="alert alert-info hidden"></div>
+        
+        <div class="input-group">
+            <label for="labelInput">Label / Deskripsi:</label>
+            <input type="text" id="labelInput" placeholder="Contoh: laptop hitam">
+        </div>
+        
+        <div class="input-group">
+            <label for="categoryInput">Kategori:</label>
+            <input type="text" id="categoryInput" placeholder="Contoh: elektronik">
+        </div>
+        
+        <button class="btn btn-primary" id="startBtn">🎥 Buka Kamera</button>
+        
+        <video id="video" autoplay playsinline></video>
+        <canvas id="canvas"></canvas>
+        
+        <button class="btn btn-success hidden" id="captureBtn">📷 AMBIL FOTO</button>
+        <button class="btn btn-danger hidden" id="stopBtn">❌ Tutup Kamera</button>
+        
+        <div class="stats">
+            <h3>Foto Terkumpul: <span id="photoCount">0</span></h3>
+            <button class="btn btn-primary" id="exportBtn" disabled>💾 Download Data</button>
+        </div>
+        
+        <div class="preview-grid" id="previewGrid"></div>
+    </div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script>
+        let stream = null;
+        let dataCollected = [];
+        let photoCount = 0;
+        
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        const startBtn = document.getElementById('startBtn');
+        const captureBtn = document.getElementById('captureBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const exportBtn = document.getElementById('exportBtn');
+        
+        const labelInput = document.getElementById('labelInput');
+        const categoryInput = document.getElementById('categoryInput');
+        const previewGrid = document.getElementById('previewGrid');
+        const photoCountSpan = document.getElementById('photoCount');
+        const alertBox = document.getElementById('alertBox');
+        
+        function showAlert(message, type = 'info') {
+            alertBox.textContent = message;
+            alertBox.className = `alert alert-${type}`;
+            alertBox.classList.remove('hidden');
+            setTimeout(() => alertBox.classList.add('hidden'), 3000);
+        }
+        
+        startBtn.addEventListener('click', async () => {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: { 
+                        facingMode: 'environment',
+                        width: { ideal: 1920 },
+                        height: { ideal: 1080 }
+                    }
+                });
+                
+                video.srcObject = stream;
+                video.style.display = 'block';
+                
+                startBtn.classList.add('hidden');
+                captureBtn.classList.remove('hidden');
+                stopBtn.classList.remove('hidden');
+                
+                showAlert('Kamera aktif!', 'success');
+            } catch (err) {
+                showAlert('Gagal akses kamera: ' + err.message, 'danger');
+            }
+        });
+        
+        captureBtn.addEventListener('click', () => {
+            const label = labelInput.value.trim() || 'unlabeled';
+            const category = categoryInput.value.trim() || 'general';
+            
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            ctx.drawImage(video, 0, 0);
+            
+            const imageData = canvas.toDataURL('image/jpeg', 0.9);
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+            const filename = `photo_${String(photoCount).padStart(4, '0')}_${timestamp}.jpg`;
+            
+            const record = {
+                photo_id: photoCount,
+                filename: filename,
+                timestamp: new Date().toLocaleString('id-ID'),
+                label: label,
+                category: category,
+                imageData: imageData
+            };
+            
+            dataCollected.push(record);
+            photoCount++;
+            
+            addPreview(record);
+            updateStats();
+            
+            labelInput.value = '';
+            categoryInput.value = '';
+            labelInput.focus();
+            
+            showAlert(`Foto ${photoCount} tersimpan!`, 'success');
+        });
+        
+        stopBtn.addEventListener('click', () => {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                video.style.display = 'none';
+                
+                startBtn.classList.remove('hidden');
+                captureBtn.classList.add('hidden');
+                stopBtn.classList.add('hidden');
+                
+                showAlert('Kamera ditutup', 'info');
+            }
+        });
+        
+        function addPreview(record) {
+            const div = document.createElement('div');
+            div.className = 'preview-item';
+            div.innerHTML = `
+                <img src="${record.imageData}" alt="${record.label}">
+                <div class="preview-info">
+                    <strong>${record.label}</strong><br>
+                    ${record.category}<br>
+                    <small>${record.timestamp}</small>
+                </div>
+            `;
+            previewGrid.insertBefore(div, previewGrid.firstChild);
+        }
+        
+        function updateStats() {
+            photoCountSpan.textContent = photoCount;
+            exportBtn.disabled = photoCount === 0;
+        }
+        
+        exportBtn.addEventListener('click', async () => {
+            if (dataCollected.length === 0) return;
+            
+            showAlert('Membuat file ZIP...', 'info');
+            
+            const zip = new JSZip();
+            const imgFolder = zip.folder('images');
+            
+            // CSV metadata
+            let csv = 'photo_id,filename,timestamp,label,category\n';
+            dataCollected.forEach(record => {
+                csv += `${record.photo_id},"${record.filename}","${record.timestamp}","${record.label}","${record.category}"\n`;
+                
+                // Add image to ZIP
+                const base64Data = record.imageData.split(',')[1];
+                imgFolder.file(record.filename, base64Data, {base64: true});
+            });
+            
+            zip.file('metadata.csv', csv);
+            
+            const blob = await zip.generateAsync({type: 'blob'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `data_collection_${Date.now()}.zip`;
+            a.click();
+            
+            showAlert('Download berhasil!', 'success');
+        });
+        
+        // Load saved data dari localStorage
+        window.addEventListener('load', () => {
+            const saved = localStorage.getItem('dataCollected');
+            if (saved) {
+                dataCollected = JSON.parse(saved);
+                photoCount = dataCollected.length;
+                dataCollected.forEach(record => addPreview(record));
+                updateStats();
+            }
+        });
+        
+        // Auto-save ke localStorage
+        window.addEventListener('beforeunload', () => {
+            localStorage.setItem('dataCollected', JSON.stringify(dataCollected));
+        });
+    </script>
+</body>
+</html>
