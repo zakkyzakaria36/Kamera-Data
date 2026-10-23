@@ -307,9 +307,15 @@
         /* SCAN MODE */
         .scan-container {
             display: grid;
-            grid-template-rows: auto 1fr auto;
+            grid-template-columns: 1fr 400px;
             gap: 20px;
-            height: calc(100vh - 100px);
+            min-height: calc(100vh - 200px);
+        }
+        
+        @media (max-width: 1024px) {
+            .scan-container {
+                grid-template-columns: 1fr;
+            }
         }
         
         .viewfinder-area {
@@ -318,12 +324,16 @@
             overflow: hidden;
             position: relative;
             box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         
         #video {
-            width: 100%;
+            width: auto;
             height: 100%;
-            object-fit: cover;
+            max-height: 80vh;
+            object-fit: contain;
             display: none;
         }
         
@@ -332,7 +342,7 @@
             top: 20px;
             left: 20px;
             right: 20px;
-            background: rgba(0,0,0,0.7);
+            background: rgba(0,0,0,0.8);
             backdrop-filter: blur(10px);
             padding: 15px 20px;
             border-radius: 15px;
@@ -340,6 +350,23 @@
             font-weight: 600;
             font-size: 14px;
             display: none;
+            z-index: 10;
+        }
+        
+        .tracking-overlay {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            background: rgba(37, 99, 235, 0.9);
+            backdrop-filter: blur(10px);
+            padding: 12px 18px;
+            border-radius: 12px;
+            color: white;
+            font-weight: 700;
+            font-size: 13px;
+            display: none;
+            z-index: 10;
         }
         
         .detection-badge {
@@ -360,10 +387,13 @@
             padding: 25px;
             border-radius: 20px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
         }
         
         .input-group {
-            margin-bottom: 20px;
+            margin-bottom: 0;
         }
         
         label {
@@ -397,14 +427,13 @@
         
         .fab-container {
             display: flex;
-            gap: 15px;
-            justify-content: center;
+            flex-direction: column;
+            gap: 12px;
         }
         
         .fab {
-            flex: 1;
-            max-width: 180px;
-            padding: 20px;
+            width: 100%;
+            padding: 18px;
             border: none;
             border-radius: 16px;
             font-size: 16px;
@@ -526,6 +555,74 @@
             transform: scale(1.1);
         }
         
+        /* ANALYTICS */
+        .analytics-section {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            margin-bottom: 20px;
+        }
+        
+        .analytics-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 20px;
+        }
+        
+        .frequency-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .frequency-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: #f8fafc;
+            padding: 15px;
+            border-radius: 12px;
+            border-left: 4px solid #2563eb;
+        }
+        
+        .frequency-icon {
+            font-size: 32px;
+        }
+        
+        .frequency-info {
+            flex: 1;
+        }
+        
+        .frequency-name {
+            font-weight: 700;
+            color: #1e293b;
+            font-size: 15px;
+            margin-bottom: 4px;
+        }
+        
+        .frequency-bar {
+            background: #e2e8f0;
+            height: 8px;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+        
+        .frequency-fill {
+            background: linear-gradient(90deg, #2563eb, #0ea5e9);
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.5s;
+        }
+        
+        .frequency-count {
+            font-size: 24px;
+            font-weight: 800;
+            color: #2563eb;
+        }
+        
         /* BOTTOM NAV MOBILE */
         .bottom-nav {
             display: none;
@@ -638,6 +735,16 @@
             font-size: 16px;
             font-weight: 600;
         }
+        
+        .tracking-info {
+            background: #dbeafe;
+            padding: 15px;
+            border-radius: 12px;
+            margin-top: 15px;
+            font-size: 13px;
+            color: #1e40af;
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
@@ -648,7 +755,7 @@
         <aside class="sidebar">
             <div class="logo-section">
                 <div class="logo-text">ZX</div>
-                <div class="logo-subtext">Live Detection</div>
+                <div class="logo-subtext">Live Detection Pro</div>
             </div>
             
             <nav>
@@ -663,6 +770,12 @@
                         <a class="nav-link" data-section="scan">
                             <span class="nav-icon">🎥</span>
                             <span>Mode Deteksi</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-section="analytics">
+                            <span class="nav-icon">📈</span>
+                            <span>Analisis Objek</span>
                         </a>
                     </li>
                     <li class="nav-item">
@@ -719,6 +832,11 @@
                         <div class="stat-label">Durasi Tracking</div>
                         <div class="stat-value" id="durationDash" style="font-size: 24px;">00:00:00</div>
                     </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">🎯</div>
+                        <div class="stat-label">Akurasi Tracking</div>
+                        <div class="stat-value" id="accuracyDisplay">IoU</div>
+                    </div>
                 </div>
                 
                 <div class="live-feed-container">
@@ -742,6 +860,13 @@
                 </div>
                 
                 <div class="scan-container">
+                    <div class="viewfinder-area">
+                        <video id="video" autoplay playsinline></video>
+                        <div class="video-overlay" id="videoOverlay"></div>
+                        <div class="tracking-overlay" id="trackingOverlay"></div>
+                        <canvas id="canvas"></canvas>
+                    </div>
+                    
                     <div class="control-panel">
                         <div class="input-group">
                             <label>🎯 Target Objek</label>
@@ -762,19 +887,43 @@
                         </div>
                         
                         <div class="timer-large" id="timerDisplay">00:00:00</div>
-                    </div>
-                    
-                    <div class="viewfinder-area">
-                        <video id="video" autoplay playsinline></video>
-                        <div class="video-overlay" id="videoOverlay"></div>
-                        <canvas id="canvas"></canvas>
-                    </div>
-                    
-                    <div class="control-panel">
+                        
+                        <div class="tracking-info">
+                            <strong>🎯 Tracking IoU Aktif</strong><br>
+                            Sistem mencegah duplikasi objek yang sama dengan algoritma Intersection over Union (IoU threshold: 0.5)
+                        </div>
+                        
                         <div class="fab-container">
-                            <button class="fab fab-green" id="startBtn">▶ Mulai</button>
+                            <button class="fab fab-green" id="startBtn">▶ Mulai Deteksi</button>
                             <button class="fab fab-blue hidden" id="captureBtn">📸 Ambil Foto</button>
-                            <button class="fab fab-red hidden" id="stopBtn">⏹ Stop</button>
+                            <button class="fab fab-red hidden" id="stopBtn">⏹ Stop Tracking</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- ANALYTICS SECTION -->
+            <section class="content-section" id="analytics">
+                <div class="header">
+                    <h1 class="header-title">Analisis Frekuensi Objek</h1>
+                </div>
+                
+                <div class="analytics-section">
+                    <div class="analytics-title">📊 Objek yang Sering Dijumpai</div>
+                    <div class="frequency-list" id="frequencyList">
+                        <div class="empty-state">
+                            <div class="empty-icon">📈</div>
+                            <div class="empty-text">Belum ada data analisis. Mulai tracking untuk melihat frekuensi objek.</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="analytics-section">
+                    <div class="analytics-title">🏆 Top 10 Objek Terdeteksi</div>
+                    <div id="topObjectsList">
+                        <div class="empty-state">
+                            <div class="empty-icon">🎯</div>
+                            <div class="empty-text">Data akan muncul setelah tracking dimulai</div>
                         </div>
                     </div>
                 </div>
@@ -803,16 +952,36 @@
                 
                 <div class="control-panel">
                     <div class="input-group">
+                        <label>🎚️ IoU Threshold (Sensitivitas Tracking)</label>
+                        <select id="iouThreshold">
+                            <option value="0.3">Rendah (0.3) - Lebih ketat</option>
+                            <option value="0.5" selected>Sedang (0.5) - Seimbang</option>
+                            <option value="0.7">Tinggi (0.7) - Lebih longgar</option>
+                        </select>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label>⏱️ Timeout Tracking (detik)</label>
+                        <select id="trackingTimeout">
+                            <option value="2000">2 detik</option>
+                            <option value="3000" selected>3 detik</option>
+                            <option value="5000">5 detik</option>
+                            <option value="10000">10 detik</option>
+                        </select>
+                    </div>
+                    
+                    <div class="input-group">
                         <label>🔄 Reset Semua Data</label>
-                        <button class="fab fab-red" id="resetAllBtn" style="max-width: 100%;">Hapus Semua Riwayat</button>
+                        <button class="fab fab-red" id="resetAllBtn">Hapus Semua Riwayat & Analisis</button>
                     </div>
                     
                     <div class="input-group">
                         <label>ℹ️ Informasi Aplikasi</label>
                         <div style="background: #f8fafc; padding: 20px; border-radius: 12px; font-size: 14px; color: #475569;">
-                            <strong>ZX Live Detection</strong><br>
-                            Versi 2.0<br>
+                            <strong>ZX Live Detection Pro</strong><br>
+                            Versi 2.1 - IoU Tracking Edition<br>
                             Powered by TensorFlow.js COCO-SSD<br>
+                            Algoritma: Intersection over Union (IoU)<br>
                             © 2026 ZX Technology
                         </div>
                     </div>
@@ -829,6 +998,10 @@
             <a class="bottom-nav-item" data-section="scan">
                 <span class="bottom-nav-icon">🎥</span>
                 <span>Deteksi</span>
+            </a>
+            <a class="bottom-nav-item" data-section="analytics">
+                <span class="bottom-nav-icon">📈</span>
+                <span>Analisis</span>
             </a>
             <a class="bottom-nav-item" data-section="history">
                 <span class="bottom-nav-icon">📸</span>
@@ -851,11 +1024,15 @@
         let isTracking = false;
         
         let totalUniqueCount = 0;
-        let trackedObjects = new Map(); // ID unik per objek
+        let trackedObjects = new Map(); // {id: {bbox, timestamp, class}}
+        let objectFrequency = {}; // {class: count}
         let dataCollected = [];
         
         let startTime = null;
         let timerInterval = null;
+        
+        let iouThreshold = 0.5;
+        let trackingTimeout = 3000;
         
         const video = document.getElementById('video');
         const canvas = document.getElementById('canvas');
@@ -869,21 +1046,37 @@
         
         const targetSelect = document.getElementById('targetObject');
         const locationInput = document.getElementById('locationInput');
+        const iouThresholdSelect = document.getElementById('iouThreshold');
+        const trackingTimeoutSelect = document.getElementById('trackingTimeout');
         const alertBox = document.getElementById('alertBox');
         
         const timerDisplay = document.getElementById('timerDisplay');
         const videoOverlay = document.getElementById('videoOverlay');
+        const trackingOverlay = document.getElementById('trackingOverlay');
         const liveFeed = document.getElementById('liveFeed');
         const historyGrid = document.getElementById('historyGrid');
+        const frequencyList = document.getElementById('frequencyList');
+        const topObjectsList = document.getElementById('topObjectsList');
         
         // Load AI Model
         async function loadModel() {
             showAlert('⏳ Memuat model AI...', 'info');
             model = await cocoSsd.load();
-            showAlert('✅ Model AI siap! Deteksi otomatis aktif', 'success');
+            showAlert('✅ Model AI siap! Tracking IoU aktif', 'success');
         }
         
         loadModel();
+        
+        // Settings
+        iouThresholdSelect.addEventListener('change', (e) => {
+            iouThreshold = parseFloat(e.target.value);
+            showAlert(`🎚️ IoU threshold diubah ke ${iouThreshold}`, 'info');
+        });
+        
+        trackingTimeoutSelect.addEventListener('change', (e) => {
+            trackingTimeout = parseInt(e.target.value);
+            showAlert(`⏱️ Timeout tracking diubah ke ${trackingTimeout/1000} detik`, 'info');
+        });
         
         // Navigation
         document.querySelectorAll('.nav-link, .bottom-nav-item').forEach(link => {
@@ -894,8 +1087,15 @@
                 document.querySelectorAll('.nav-link, .bottom-nav-item').forEach(l => l.classList.remove('active'));
                 link.classList.add('active');
                 
+                // Find matching nav items across both desktop and mobile
+                document.querySelectorAll(`[data-section="${section}"]`).forEach(l => l.classList.add('active'));
+                
                 document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
                 document.getElementById(section).classList.add('active');
+                
+                if (section === 'analytics') {
+                    updateAnalytics();
+                }
             });
         });
         
@@ -937,20 +1137,54 @@
             document.getElementById('durationDash').textContent = '00:00:00';
         }
         
-        // Fungsi tracking objek unik (no duplicate)
-        function generateObjectID(prediction) {
-            // ID berdasarkan posisi tengah bounding box (toleransi 50px)
-            const centerX = Math.round((prediction.bbox[0] + prediction.bbox[2] / 2) / 50) * 50;
-            const centerY = Math.round((prediction.bbox[1] + prediction.bbox[3] / 2) / 50) * 50;
-            return `${prediction.class}_${centerX}_${centerY}`;
+        // IoU Calculation
+        function calculateIoU(boxA, boxB) {
+            const [x1A, y1A, wA, hA] = boxA;
+            const [x1B, y1B, wB, hB] = boxB;
+            
+            const x2A = x1A + wA;
+            const y2A = y1A + hA;
+            const x2B = x1B + wB;
+            const y2B = y1B + hB;
+            
+            const xLeft = Math.max(x1A, x1B);
+            const yTop = Math.max(y1A, y1B);
+            const xRight = Math.min(x2A, x2B);
+            const yBottom = Math.min(y2A, y2B);
+            
+            if (xRight < xLeft || yBottom < yTop) return 0;
+            
+            const intersectionArea = (xRight - xLeft) * (yBottom - yTop);
+            const boxAArea = wA * hA;
+            const boxBArea = wB * hB;
+            const unionArea = boxAArea + boxBArea - intersectionArea;
+            
+            return intersectionArea / unionArea;
+        }
+        
+        function findMatchingTrack(prediction) {
+            let bestMatch = null;
+            let bestIoU = 0;
+            
+            for (let [id, track] of trackedObjects.entries()) {
+                if (track.class !== prediction.class) continue;
+                
+                const iou = calculateIoU(prediction.bbox, track.bbox);
+                
+                if (iou > iouThreshold && iou > bestIoU) {
+                    bestIoU = iou;
+                    bestMatch = id;
+                }
+            }
+            
+            return bestMatch;
         }
         
         function cleanupOldTracking() {
             const now = Date.now();
-            const threshold = 3000; // 3 detik
             
-            for (let [id, timestamp] of trackedObjects.entries()) {
-                if (now - timestamp > threshold) {
+            for (let [id, track] of trackedObjects.entries()) {
+                if (now - track.timestamp > trackingTimeout) {
                     trackedObjects.delete(id);
                 }
             }
@@ -961,14 +1195,16 @@
                 stream = await navigator.mediaDevices.getUserMedia({
                     video: { 
                         facingMode: 'environment',
-                        width: { ideal: 1920 },
-                        height: { ideal: 1080 }
+                        width: { ideal: 1080 },
+                        height: { ideal: 1920 },
+                        aspectRatio: { ideal: 9/16 }
                     }
                 });
                 
                 video.srcObject = stream;
                 video.style.display = 'block';
                 videoOverlay.style.display = 'block';
+                trackingOverlay.style.display = 'block';
                 
                 startBtn.classList.add('hidden');
                 captureBtn.classList.remove('hidden');
@@ -980,7 +1216,7 @@
                 startLiveDetection();
                 startTimer();
                 
-                showAlert('✅ Kamera aktif! Deteksi dimulai', 'success');
+                showAlert('✅ Kamera aktif! Tracking IoU dimulai', 'success');
             } catch (err) {
                 showAlert('❌ Gagal akses kamera: ' + err.message, 'info');
             }
@@ -1002,21 +1238,37 @@
                 
                 cleanupOldTracking();
                 
-                let newDetections = [];
+                let newDetections = 0;
                 filtered.forEach(pred => {
-                    const objID = generateObjectID(pred);
+                    const matchId = findMatchingTrack(pred);
                     const now = Date.now();
                     
-                    if (!trackedObjects.has(objID)) {
-                        // Objek baru terdeteksi
-                        trackedObjects.set(objID, now);
+                    if (matchId) {
+                        // Update existing track
+                        trackedObjects.set(matchId, {
+                            bbox: pred.bbox,
+                            timestamp: now,
+                            class: pred.class
+                        });
+                    } else {
+                        // New unique object
+                        const newId = `obj_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+                        trackedObjects.set(newId, {
+                            bbox: pred.bbox,
+                            timestamp: now,
+                            class: pred.class
+                        });
+                        
                         totalUniqueCount++;
-                        newDetections.push(pred);
+                        newDetections++;
+                        
+                        // Update frequency
+                        if (!objectFrequency[pred.class]) {
+                            objectFrequency[pred.class] = 0;
+                        }
+                        objectFrequency[pred.class]++;
                         
                         addLiveFeed(pred.class, Math.round(pred.score * 100));
-                    } else {
-                        // Update timestamp objek existing
-                        trackedObjects.set(objID, now);
                     }
                 });
                 
@@ -1029,10 +1281,12 @@
                     const detections = filtered.map(p => 
                         `<span class="detection-badge">${p.class} ${Math.round(p.score * 100)}%</span>`
                     ).join(' ');
-                    videoOverlay.innerHTML = `Terdeteksi: ${detections}`;
+                    videoOverlay.innerHTML = `Terdeteksi saat ini: ${detections}`;
                 } else {
                     videoOverlay.innerHTML = 'Tidak ada objek terdeteksi';
                 }
+                
+                trackingOverlay.innerHTML = `🎯 Tracking aktif: ${trackedObjects.size} objek | 🆕 Baru: +${newDetections}`;
                 
             }, 500);
         }
@@ -1047,7 +1301,7 @@
             item.className = 'feed-item';
             item.innerHTML = `
                 <div class="feed-info">
-                    <div class="feed-object">${objectClass}</div>
+                    <div class="feed-object">${getObjectIcon(objectClass)} ${objectClass}</div>
                     <div class="feed-time">🕐 ${now}</div>
                 </div>
                 <div class="feed-badge">${confidence}%</div>
@@ -1058,6 +1312,118 @@
             if (liveFeed.children.length > 20) {
                 liveFeed.removeChild(liveFeed.lastChild);
             }
+        }
+        
+        function getObjectIcon(className) {
+            const icons = {
+                'person': '👤',
+                'car': '🚗',
+                'motorcycle': '🏍️',
+                'bicycle': '🚲',
+                'bus': '🚌',
+                'truck': '🚚',
+                'traffic light': '🚦',
+                'stop sign': '🛑',
+                'backpack': '🎒',
+                'umbrella': '☂️',
+                'handbag': '👜',
+                'tie': '👔',
+                'suitcase': '🧳',
+                'bottle': '🍾',
+                'wine glass': '🍷',
+                'cup': '☕',
+                'fork': '🍴',
+                'knife': '🔪',
+                'spoon': '🥄',
+                'bowl': '🥣',
+                'banana': '🍌',
+                'apple': '🍎',
+                'sandwich': '🥪',
+                'orange': '🍊',
+                'broccoli': '🥦',
+                'carrot': '🥕',
+                'hot dog': '🌭',
+                'pizza': '🍕',
+                'donut': '🍩',
+                'cake': '🍰',
+                'chair': '🪑',
+                'couch': '🛋️',
+                'potted plant': '🪴',
+                'bed': '🛏️',
+                'dining table': '🍽️',
+                'toilet': '🚽',
+                'tv': '📺',
+                'laptop': '💻',
+                'mouse': '🖱️',
+                'remote': '📱',
+                'keyboard': '⌨️',
+                'cell phone': '📱',
+                'book': '📚',
+                'clock': '🕐',
+                'vase': '🏺',
+                'scissors': '✂️',
+                'teddy bear': '🧸',
+                'hair drier': '💨',
+                'toothbrush': '🪥'
+            };
+            return icons[className] || '🎯';
+        }
+        
+        function updateAnalytics() {
+            if (Object.keys(objectFrequency).length === 0) {
+                frequencyList.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">📈</div>
+                        <div class="empty-text">Belum ada data analisis. Mulai tracking untuk melihat frekuensi objek.</div>
+                    </div>
+                `;
+                topObjectsList.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">🎯</div>
+                        <div class="empty-text">Data akan muncul setelah tracking dimulai</div>
+                    </div>
+                `;
+                return;
+            }
+            
+            const sorted = Object.entries(objectFrequency).sort((a, b) => b[1] - a[1]);
+            const maxCount = sorted[0][1];
+            
+            frequencyList.innerHTML = '';
+            sorted.forEach(([className, count]) => {
+                const percentage = (count / maxCount) * 100;
+                const item = document.createElement('div');
+                item.className = 'frequency-item';
+                item.innerHTML = `
+                    <div class="frequency-icon">${getObjectIcon(className)}</div>
+                    <div class="frequency-info">
+                        <div class="frequency-name">${className}</div>
+                        <div class="frequency-bar">
+                            <div class="frequency-fill" style="width: ${percentage}%"></div>
+                        </div>
+                    </div>
+                    <div class="frequency-count">${count}</div>
+                `;
+                frequencyList.appendChild(item);
+            });
+            
+            // Top 10
+            topObjectsList.innerHTML = '';
+            sorted.slice(0, 10).forEach(([className, count], idx) => {
+                const medals = ['🥇', '🥈', '🥉'];
+                const medal = idx < 3 ? medals[idx] : `${idx + 1}.`;
+                
+                const item = document.createElement('div');
+                item.className = 'feed-item';
+                item.innerHTML = `
+                    <div class="feed-info">
+                        <div class="feed-object">${medal} ${getObjectIcon(className)} ${className}</div>
+                        <div class="feed-time">Terdeteksi ${count}x</div>
+                    </div>
+                    <div class="feed-badge">${Math.round((count/totalUniqueCount)*100)}%</div>
+                `;
+                topObjectsList.appendChild(item);
+            });
         }
         
         captureBtn.addEventListener('click', async () => {
@@ -1088,7 +1454,8 @@
                 detected: detectedObjects.join(', ') || 'Tidak ada deteksi',
                 imageData,
                 totalCount: totalUniqueCount,
-                duration: timerDisplay.textContent
+                duration: timerDisplay.textContent,
+                frequency: {...objectFrequency}
             };
             
             dataCollected.push(record);
@@ -1108,6 +1475,7 @@
                 stream.getTracks().forEach(track => track.stop());
                 video.style.display = 'none';
                 videoOverlay.style.display = 'none';
+                trackingOverlay.style.display = 'none';
             }
             
             if (detectionInterval) {
@@ -1191,17 +1559,36 @@
             
             zip.file('data_tracking.csv', csv);
             
+            // Analytics CSV
+            let analyticsCsv = 'object_class,frequency,percentage\n';
+            const sorted = Object.entries(objectFrequency).sort((a, b) => b[1] - a[1]);
+            sorted.forEach(([className, count]) => {
+                const percentage = (count / totalUniqueCount * 100).toFixed(2);
+                analyticsCsv += `"${className}",${count},${percentage}%\n`;
+            });
+            zip.file('analytics_frequency.csv', analyticsCsv);
+            
             const summary = `
-ZX LIVE DETECTION - LAPORAN RINGKASAN
+ZX LIVE DETECTION PRO - LAPORAN RINGKASAN
 ========================================
-Total Foto: ${dataCollected.length}
-Objek Unik Terdeteksi: ${totalUniqueCount}
-Durasi Total: ${timerDisplay.textContent}
-Target: ${targetSelect.options[targetSelect.selectedIndex].text}
-Lokasi: ${locationInput.value || 'Tidak disebutkan'}
+Metode Tracking: Intersection over Union (IoU)
+IoU Threshold: ${iouThreshold}
+Timeout: ${trackingTimeout/1000} detik
+
+STATISTIK:
+- Total Foto: ${dataCollected.length}
+- Objek Unik Terdeteksi: ${totalUniqueCount}
+- Durasi Total: ${timerDisplay.textContent}
+- Target: ${targetSelect.options[targetSelect.selectedIndex].text}
+- Lokasi: ${locationInput.value || 'Tidak disebutkan'}
+
+TOP 5 OBJEK PALING SERING:
+${sorted.slice(0, 5).map((e, i) => `${i+1}. ${e[0]}: ${e[1]}x (${(e[1]/totalUniqueCount*100).toFixed(1)}%)`).join('\n')}
+
 Dibuat: ${new Date().toLocaleString('id-ID')}
 ========================================
 Powered by ZX Technology
+IoU Tracking Algorithm v2.1
             `.trim();
             
             zip.file('ringkasan.txt', summary);
@@ -1210,7 +1597,7 @@ Powered by ZX Technology
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `zx_detection_${Date.now()}.zip`;
+            a.download = `zx_detection_iou_${Date.now()}.zip`;
             a.click();
             
             showAlert('✅ Export berhasil!', 'success');
@@ -1218,11 +1605,12 @@ Powered by ZX Technology
         });
         
         resetAllBtn.addEventListener('click', () => {
-            if (!confirm('Hapus semua data? Tindakan ini tidak bisa dibatalkan!')) return;
+            if (!confirm('Hapus semua data termasuk analisis frekuensi? Tindakan ini tidak bisa dibatalkan!')) return;
             
             dataCollected = [];
             totalUniqueCount = 0;
             trackedObjects.clear();
+            objectFrequency = {};
             
             document.getElementById('dashboardCount').textContent = '0';
             document.getElementById('uniqueCount').textContent = '0';
@@ -1237,15 +1625,17 @@ Powered by ZX Technology
             
             resetTimer();
             updateHistory();
+            updateAnalytics();
             saveToLocalStorage();
             
-            showAlert('🔄 Semua data dihapus', 'info');
+            showAlert('🔄 Semua data dan analisis dihapus', 'info');
         });
         
         function saveToLocalStorage() {
             localStorage.setItem('zx_detection_data', JSON.stringify({
                 dataCollected,
-                totalUniqueCount
+                totalUniqueCount,
+                objectFrequency
             }));
         }
         
@@ -1255,12 +1645,17 @@ Powered by ZX Technology
                 const data = JSON.parse(saved);
                 dataCollected = data.dataCollected || [];
                 totalUniqueCount = data.totalUniqueCount || 0;
+                objectFrequency = data.objectFrequency || {};
                 
                 document.getElementById('dashboardCount').textContent = totalUniqueCount;
                 document.getElementById('uniqueCount').textContent = totalUniqueCount;
                 
                 if (dataCollected.length > 0) {
                     updateHistory();
+                }
+                
+                if (Object.keys(objectFrequency).length > 0) {
+                    updateAnalytics();
                 }
             }
         }
